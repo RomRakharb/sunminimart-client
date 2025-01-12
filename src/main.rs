@@ -1,53 +1,101 @@
-use iced::widget::{button, column, text, Column};
+use iced::widget::{button, column, container, row, text, text_input, Row};
+use iced::Alignment::Center;
+use iced::Element;
+use iced::Length::{Fill, FillPortion};
 
 pub fn main() -> iced::Result {
-    iced::run("A cool counter", Counter::update, Counter::view)
+    iced::run("A cool counter", State::update, State::view)
+}
+
+#[derive(Default, Clone)]
+struct Item {
+    barcode: String,
+    name: String,
+    price: u32,
+    amount: u32,
+    sale_type: SaleType,
+    total_price: u32,
+}
+
+#[derive(Default, Clone)]
+enum SaleType {
+    #[default]
+    Retail,
+    Wholesale,
 }
 
 #[derive(Default)]
-struct Counter {
-    value: i64,
+struct State {
+    item: Item,
+    item_list: Vec<Item>,
+    total_price: u32,
+    content: String,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum Message {
-    Increment,
-    Decrement,
+    Submit,
+    ContentChanged(String),
 }
 
-impl Counter {
+impl State {
     fn update(&mut self, message: Message) {
         match message {
-            Message::Increment => {
-                self.value += 1;
+            Message::Submit => {
+                self.content = format!("{}!!", self.content);
             }
-            Message::Decrement => {
-                self.value -= 1;
+            Message::ContentChanged(content) => {
+                self.content = content;
             }
         }
     }
 
-    fn view(&self) -> Column<Message> {
-        column![
-            button("+").on_press(Message::Increment),
-            text(self.value),
-            button("-").on_press(Message::Decrement),
-        ]
+    fn view(&self) -> Element<Message> {
+        container(column![
+            row![
+                text(&self.content).width(FillPortion(2)),
+                column![
+                    text(&self.content),
+                    text(&self.content),
+                    text(&self.content)
+                ]
+                .width(Fill)
+                .clip(true)
+            ]
+            .spacing(10),
+            row![
+                text_input("", &self.content)
+                    .on_input(Message::ContentChanged)
+                    .on_submit(Message::Submit),
+                text_input("", &self.content)
+                    .on_input(Message::ContentChanged)
+                    .on_submit(Message::Submit),
+                text_input("", &self.content)
+                    .on_input(Message::ContentChanged)
+                    .on_submit(Message::Submit),
+                text_input("", &self.content)
+                    .on_input(Message::ContentChanged)
+                    .on_submit(Message::Submit),
+            ]
+            .spacing(10)
+            .padding(10)
+        ])
+        .into()
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+// #[cfg(test)]
+// mod test {
+//     use super::*;
 
-    #[test]
-    fn it_counts_properly() {
-        let mut counter = Counter::default();
+//     #[test]
+//     fn it_counts_properly() {
+//         let mut counter = State::default();
 
-        counter.update(Message::Increment);
-        counter.update(Message::Increment);
-        counter.update(Message::Decrement);
+//         counter.update(Message::Increment);
+//         counter.update(Message::Increment);
+//         counter.update(Message::Decrement);
 
-        assert_eq!(counter.value, 1);
-    }
-}
+//         assert_eq!(counter.value, 1);
+//     }
+// }
