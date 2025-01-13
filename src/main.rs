@@ -113,7 +113,14 @@ impl State {
         ]
         .align_x(Center);
 
-        let list = scrollable(column![]).width(FillPortion(4));
+        let list = scrollable({
+            let mut item_list = column![];
+            for item in self.items.clone() {
+                &item_list.push(item);
+            }
+            item_list
+        })
+        .width(FillPortion(4));
 
         // View start
         container(column![
