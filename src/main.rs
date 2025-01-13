@@ -1,11 +1,10 @@
-use iced::widget::shader::wgpu::naga::Span;
 use iced::widget::{
-    button, column, container, row, scrollable, text, text_input, Column, Row, Text, TextInput,
+    button, column, container, keyed_column, row, scrollable, text, text_input, Column, Row, Text,
+    TextInput,
 };
 use iced::Alignment::Center;
 use iced::Element;
-use iced::Length::{Fill, FillPortion};
-use iced::{border, Border};
+use iced::Length::{Fill, FillPortion, Shrink};
 
 mod widget;
 use widget::LabeledTextBox;
@@ -14,7 +13,7 @@ pub fn main() -> iced::Result {
     iced::run("A cool counter", State::update, State::view)
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq)]
 struct Item {
     barcode: String,
     name: String,
@@ -52,6 +51,8 @@ impl State {
                     amount: 1,
                     total_price: 100,
                 };
+                self.items.push(self.item.clone());
+                self.item = Item::default();
             }
             Message::ContentChanged(content) => {}
             Message::BarcodeChanged(barcode) => {
@@ -113,23 +114,28 @@ impl State {
         ]
         .align_x(Center);
 
-        let list = scrollable({
-            let mut item_list = column![];
-            for item in self.items.clone() {
-                &item_list.push(item);
-            }
-            item_list
-        })
-        .width(FillPortion(4));
+        let list = keyed_column(self.items.iter().enumerate().map(|x| {
+            (
+                x.0,
+                row![
+                    text!("{}", x.0 + 1).width(Fill),
+                    text!("{}", x.1.barcode).width(FillPortion(2)),
+                    text!("{}", x.1.name).width(Fill),
+                    text!("{}", x.1.price).width(Fill),
+                    text!("{}", x.1.amount).width(Fill),
+                    text!("{}", x.1.total_price).width(Fill),
+                ]
+                .into(),
+            )
+        }));
 
         // View start
         container(column![
             row![
-                // scrollable(list).width(FillPortion(4)),
-                list,
-                column![total_price, current_price, received, change,]
-                    .width(Fill)
-                    .clip(true)
+                scrollable(list)
+                    .height(FillPortion(2))
+                    .width(FillPortion(4)),
+                column![total_price, current_price, received, change,].width(Fill)
             ]
             .spacing(10)
             .padding(10),
