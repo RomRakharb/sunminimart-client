@@ -38,6 +38,11 @@ sudo apt-get update && apt-get install -y \
     libgles2-mesa \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+sudo apt-get install -y software-properties-common
+sudo apt update
+sudo add-apt-repository -y ppa:maveonair/helix-editor
+sudo apt update
+sudo apt install helix
 echo
 echo "---------------------"
 echo "install script ends"
