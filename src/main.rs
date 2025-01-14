@@ -7,7 +7,7 @@ use iced::Element;
 use iced::Length::{Fill, FillPortion, Shrink};
 
 mod widget;
-use widget::LabeledTextBox;
+use widget::labeled_value;
 
 pub fn main() -> iced::Result {
     iced::run("A cool counter", State::update, State::view)
@@ -44,15 +44,18 @@ impl State {
     fn update(&mut self, message: Message) {
         match message {
             Message::Submit => {
-                self.item = Item {
-                    barcode: self.item.barcode.clone(),
-                    name: "name".to_string(),
-                    price: 100,
-                    amount: 1,
-                    total_price: 100,
-                };
-                self.items.push(self.item.clone());
-                self.item = Item::default();
+                if !self.item.barcode.is_empty() {
+                    self.item = Item {
+                        barcode: self.item.barcode.clone(),
+                        name: "name".to_string(),
+                        price: 100,
+                        amount: 1,
+                        total_price: 100,
+                    };
+                    self.total_price += self.item.total_price;
+                    self.items.push(self.item.clone());
+                    self.item = Item::default();
+                }
             }
             Message::ContentChanged(content) => {}
             Message::BarcodeChanged(barcode) => {
@@ -63,11 +66,8 @@ impl State {
 
     fn view(&self) -> Element<Message> {
         // Right
-        let total_price = column![
-            text("Total Price"),
-            text_input("", &format!("{}", self.total_price)).align_x(Center)
-        ]
-        .align_x(Center);
+        let total_price = labeled_value("Total Price:".to_string(), &self.total_price);
+
         let current_price = column![
             text("Current Price"),
             text_input("", &format!("{}", self.item.price)).align_x(Center)
