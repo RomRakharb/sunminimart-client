@@ -7,7 +7,7 @@ use iced::Element;
 use iced::Length::{Fill, FillPortion, Shrink};
 
 mod widget;
-use widget::labeled_value;
+use widget::{labeled_text_input, labeled_value};
 
 pub fn main() -> iced::Result {
     iced::run("A cool counter", State::update, State::view)
@@ -19,7 +19,7 @@ struct Item {
     name: String,
     price: u32,
     amount: u32,
-    total_price: u32,
+    sum: u32,
 }
 
 #[derive(Default)]
@@ -35,84 +35,73 @@ struct State {
 
 #[derive(Debug, Clone)]
 enum Message {
-    Submit,
-    ContentChanged(String),
+    BarcodeSubmit,
+    AmountSubmit,
     BarcodeChanged(String),
+    AmountChanged(u32),
 }
 
 impl State {
     fn update(&mut self, message: Message) {
         match message {
-            Message::Submit => {
+            Message::BarcodeChanged(barcode) => {
+                self.item.barcode = barcode;
+            }
+            Message::BarcodeSubmit => {
                 if !self.item.barcode.is_empty() {
                     self.item = Item {
                         barcode: self.item.barcode.clone(),
                         name: "name".to_string(),
                         price: 100,
                         amount: 1,
-                        total_price: 100,
+                        sum: 100,
                     };
-                    self.total_price += self.item.total_price;
+                    self.total_price += self.item.sum;
                     self.items.push(self.item.clone());
-                    self.item = Item::default();
+                    self.item.barcode = String::new()
                 }
             }
-            Message::ContentChanged(content) => {}
-            Message::BarcodeChanged(barcode) => {
-                self.item.barcode = barcode;
+            Message::AmountChanged(amount) => {
+                self.item.amount = amount;
             }
+            Message::AmountSubmit => {}
         }
     }
 
     fn view(&self) -> Element<Message> {
         // Right
         let total_price = labeled_value("Total Price:".to_string(), &self.total_price);
+        let current_price = labeled_value("Current Price:".to_string(), &self.item.price);
 
-        let current_price = column![
-            text("Current Price"),
-            text_input("", &format!("{}", self.item.price)).align_x(Center)
-        ]
-        .align_x(Center);
-        let received = column![
-            text("Received:"),
-            text_input("", &format!("{}", self.received)).align_x(Center)
-        ]
-        .align_x(Center);
-        let change = column![
-            text("Change:"),
-            text_input("", &format!("{}", self.change)).align_x(Center)
-        ]
-        .align_x(Center);
+        // let received = column![
+        //     text("Received:"),
+        //     text_input("", &format!("{}", self.received)).align_x(Center)
+        // ]
+        // .align_x(Center);
+        // let change = column![
+        //     text("Change:"),
+        //     text_input("", &format!("{}", self.change)).align_x(Center)
+        // ]
+        // .align_x(Center);
 
         // Bottom
-        let amount = column![
-            text("Amount:"),
-            text_input("", &format!("{}", self.item.amount)).align_x(Center)
-        ]
-        .align_x(Center);
-        let barcode = column![
-            text("Barcode:"),
-            text_input("", &format!("{}", self.item.barcode))
-                .on_input(|input: String| { Message::BarcodeChanged(input) })
-                .on_submit(Message::Submit)
-                .align_x(Center)
-        ]
-        .align_x(Center);
-        let name = column![
-            text("Name:"),
-            text_input("", &format!("{}", self.item.name)).align_x(Center)
-        ]
-        .align_x(Center);
-        let price = column![
-            text("Price:"),
-            text_input("", &format!("{}", self.item.price)).align_x(Center)
-        ]
-        .align_x(Center);
-        let total_items_price = column![
-            text("Total Price:"),
-            text_input("", &format!("{}", self.item.total_price)).align_x(Center)
-        ]
-        .align_x(Center);
+        let amount = labeled_text_input(
+            "Amount".to_string(),
+            self.item.amount,
+            |input: String| Message::AmountChanged(input.parse().unwrap_or(1)),
+            Message::AmountSubmit,
+        );
+
+        let barcode = labeled_text_input(
+            "Barcode".to_string(),
+            self.item.barcode.clone(),
+            |input: String| Message::BarcodeChanged(input),
+            Message::BarcodeSubmit,
+        );
+
+        let name = labeled_value("Name:".to_string(), &self.item.name);
+        let price = labeled_value("Price:".to_string(), &self.item.price);
+        let sum = labeled_value("Sum:".to_string(), &self.item.sum);
 
         let list = keyed_column(self.items.iter().enumerate().map(|x| {
             (
@@ -123,7 +112,7 @@ impl State {
                     text!("{}", x.1.name).width(Fill),
                     text!("{}", x.1.price).width(Fill),
                     text!("{}", x.1.amount).width(Fill),
-                    text!("{}", x.1.total_price).width(Fill),
+                    text!("{}", x.1.sum).width(Fill),
                 ]
                 .into(),
             )
@@ -135,11 +124,11 @@ impl State {
                 scrollable(list)
                     .height(FillPortion(2))
                     .width(FillPortion(4)),
-                column![total_price, current_price, received, change,].width(Fill)
+                column![total_price, current_price].width(Fill)
             ]
             .spacing(10)
             .padding(10),
-            row![amount, barcode, name, price, total_items_price,]
+            row![amount, barcode, name, price, sum,]
                 .spacing(10)
                 .padding(10)
         ])

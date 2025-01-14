@@ -8,22 +8,32 @@ use iced::{
     Theme,
 };
 
-pub fn LabeledTextBox<T: std::fmt::Display>(
-    label: String,
-    placeholder: String,
-    value: &T,
-) -> Column<'static, Message> {
-    column![
-        text(label),
-        text_input(&placeholder, &format!("{}", value)).align_x(Center)
-    ]
-}
-
 pub fn labeled_value<T: std::fmt::Display>(label: String, value: &T) -> Column<'static, Message> {
     column![
         text(label).size(20).width(Fill).center(),
-        container(text(format!("{}", value)).size(50).width(Fill).center())
+        container(text(format!("{}", value)).size(20).width(Fill).center())
             .style(|_| container::bordered_box(&Theme::Light))
             .width(Fill),
     ]
+}
+
+pub fn labeled_text_input<T: std::fmt::Display, F>(
+    label: String,
+    value: T,
+    on_input: F,
+    on_submit: Message,
+) -> Column<'static, Message>
+where
+    F: Fn(String) -> Message + 'static,
+{
+    column![
+        text(label).size(20).width(Fill).center(),
+        text_input("", &format!("{}", value))
+            .size(20)
+            .width(Fill)
+            .align_x(Center)
+            .on_input(on_input)
+            .on_submit(on_submit)
+    ]
+    .align_x(Center)
 }
