@@ -15,6 +15,17 @@ pub fn labeled_value<T: std::fmt::Display>(label: String, value: &T) -> Column<'
     ]
 }
 
+pub fn labeled_text_box<T: std::fmt::Display>(label: String, value: T) -> Column<'static, Message> {
+    column![
+        text(label).size(20).width(Fill).center(),
+        text_input("", &format!("{}", value))
+            .size(20)
+            .width(Fill)
+            .align_x(Center)
+    ]
+    .align_x(Center)
+}
+
 pub fn labeled_text_input<T: std::fmt::Display, F>(
     label: String,
     value: T,
