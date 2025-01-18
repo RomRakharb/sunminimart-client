@@ -6,10 +6,15 @@ use iced::{
     Theme,
 };
 
-pub fn labeled_value<T: std::fmt::Display>(label: String, value: &T) -> Column<'static, Message> {
+pub fn labeled_value<T: std::fmt::Display>(
+    thai_label: String,
+    english_label: String,
+    value: &T,
+) -> Column<'static, Message> {
     column![
-        text(label).size(20).width(Fill).center(),
-        container(text(format!("{}", value)).size(27).width(Fill).center())
+        text(thai_label).size(40).width(Fill).center(),
+        text(english_label).size(40).width(Fill).center(),
+        container(text(format!("{}", value)).size(50).width(Fill).center())
             .style(|_| container::bordered_box(&Theme::Light))
             .width(Fill),
     ]
@@ -17,9 +22,9 @@ pub fn labeled_value<T: std::fmt::Display>(label: String, value: &T) -> Column<'
 
 pub fn labeled_text_box<T: std::fmt::Display>(label: String, value: T) -> Column<'static, Message> {
     column![
-        text(label).size(20).width(Fill).center(),
+        text(label).size(25).width(Fill).center(),
         text_input("", &format!("{}", value))
-            .size(20)
+            .size(25)
             .width(Fill)
             .align_x(Center)
     ]
@@ -36,9 +41,9 @@ where
     F: Fn(String) -> Message + 'static,
 {
     column![
-        text(label).size(20).width(Fill).center(),
+        text(label).size(25).width(Fill).center(),
         text_input("", &format!("{}", value))
-            .size(20)
+            .size(25)
             .width(Fill)
             .align_x(Center)
             .on_input(on_input)
