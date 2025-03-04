@@ -1,8 +1,10 @@
 use iced::font::Family;
+use iced::keyboard::key::Named;
+use iced::keyboard::Key;
 use iced::widget::{button, column, container, keyed_column, row, scrollable, text};
 use iced::Alignment::Center;
 use iced::Length::{Fill, FillPortion};
-use iced::Theme;
+use iced::{keyboard, Subscription, Theme};
 use iced::{Element, Font};
 
 mod widget;
@@ -11,11 +13,12 @@ use widget::{labeled_text_box, labeled_text_input, labeled_value};
 pub fn main() -> iced::Result {
     iced::application("Sunminimart", State::update, State::view)
         .default_font(Font {
-            family: Family::Name("TH Sarabun New"),
+            family: Family::Name("Sarabun"),
             weight: iced::font::Weight::Normal,
             stretch: iced::font::Stretch::Normal,
             style: iced::font::Style::Normal,
         })
+        .subscription(State::subscription)
         .run()
 }
 
@@ -79,10 +82,12 @@ enum MessageSale {
     EnterPay,
     Receive(String),
     Pay,
+    Back,
 }
 
 #[derive(Debug, Clone)]
 enum MessageStock {
+    Back,
     None,
 }
 
@@ -138,8 +143,10 @@ impl State {
                     sale.received = received;
                 }
                 MessageSale::Pay => {}
+                MessageSale::Back => *self = State { pages: Pages::Main },
             },
             (Pages::Stock, Message::Stock(message_stock)) => match message_stock {
+                MessageStock::Back => *self = State { pages: Pages::Main },
                 _ => {}
             },
             _ => {
@@ -274,6 +281,22 @@ impl State {
                 .into()
             }
             Pages::Stock => container(column![]).into(),
+        }
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        match self.pages {
+            Pages::Sale(_) => keyboard::on_key_release(|key, _| match key {
+                Key::Named(Named::Escape) => Some(Message::Sale(MessageSale::Back)),
+                _ => None,
+            }),
+            Pages::Stock => keyboard::on_key_release(|key, _| match key {
+                Key::Named(Named::Escape) => Some(Message::Stock(MessageStock::Back)),
+                _ => None,
+            }),
+            Pages::Main => keyboard::on_key_release(|key, _| match key {
+                _ => None,
+            }),
         }
     }
 }
