@@ -1,23 +1,21 @@
 use iced::font::Family;
 use iced::keyboard::key::Named;
 use iced::keyboard::Key;
-use iced::widget::{button, column, container, keyed_column, row, scrollable, text};
-use iced::Alignment::Center;
-use iced::Length::{Fill, FillPortion};
-use iced::{keyboard, Subscription, Theme};
+use iced::{keyboard, Subscription};
 use iced::{Element, Font};
 
 mod widget;
-use widget::{labeled_text_box, labeled_text_input, labeled_value};
+mod pages {
+    pub mod main;
+    pub mod sale;
+    pub mod stock;
+}
+
+use crate::pages::{main::main as main_page, sale::sale as sale_page, stock::stock as stock_page};
 
 pub fn main() -> iced::Result {
     iced::application("Sunminimart", State::update, State::view)
-        .default_font(Font {
-            family: Family::Name("Sarabun"),
-            weight: iced::font::Weight::Normal,
-            stretch: iced::font::Stretch::Normal,
-            style: iced::font::Style::Normal,
-        })
+        .default_font(thai_font())
         .subscription(State::subscription)
         .run()
 }
@@ -99,7 +97,7 @@ enum MessageMain {
 
 fn thai_font() -> Font {
     Font {
-        family: Family::Name("TH Sarabun New"),
+        family: Family::Name("Sarabun"),
         weight: iced::font::Weight::Normal,
         stretch: iced::font::Stretch::Normal,
         style: iced::font::Style::Normal,
@@ -158,143 +156,23 @@ impl State {
     fn view(&self) -> Element<Message> {
         // View start
         match &self.pages {
-            Pages::Main => {
-                let sale_button = button(text("ขาย").font(thai_font()).center().size(40))
-                    .width(300)
-                    .on_press(Message::Main(MessageMain::GotoSale));
-                let stock_button = button(text("คลังสินค้า").font(thai_font()).center().size(40))
-                    .width(300)
-                    .on_press(Message::Main(MessageMain::GotoStock));
-
-                container(
-                    container(
-                        column![sale_button, stock_button]
-                            .spacing(20)
-                            .align_x(Center),
-                    )
-                    .style(|_| container::bordered_box(&Theme::Light))
-                    .padding(50),
-                )
-                .center(Fill)
-                .into()
-            }
-
-            Pages::Sale(sale) => {
-                // Right
-                let total_price =
-                    labeled_value("รวม:".to_string(), "Total Price".to_string(), &sale.total);
-                let current_price =
-                    labeled_value("ราคา:".to_string(), "Price".to_string(), &sale.item.price);
-                let received = labeled_text_input(
-                    "รับเงิน / Received".to_string(),
-                    &sale.received,
-                    |input: String| Message::Sale(MessageSale::Receive(input)),
-                    Message::Sale(MessageSale::Pay),
-                );
-                let change = ();
-                let pay_button = container(
-                    button(text("จ่ายเงิน / Pay").center().size(40).width(Fill))
-                        .on_press(Message::Sale(MessageSale::Pay)),
-                )
-                .height(Fill)
-                .align_y(Center);
-
-                // Bottom
-                let amount = labeled_text_input(
-                    "จำนวน / Amount".to_string(),
-                    sale.item.amount.clone(),
-                    |input: String| Message::Sale(MessageSale::AmountChanged(input)),
-                    Message::Sale(MessageSale::AmountSubmit),
-                );
-                let barcode = labeled_text_input(
-                    "บาร์โค๊ด / Barcode".to_string(),
-                    sale.item.barcode.clone(),
-                    |input: String| Message::Sale(MessageSale::BarcodeChanged(input)),
-                    Message::Sale(MessageSale::BarcodeSubmit),
-                );
-                let name = labeled_text_box("ชื่อสินค้า / Name".to_string(), &sale.item.name);
-                let price = labeled_text_box("ราคา / Price".to_string(), sale.item.price);
-                let sum = labeled_text_box("รวม / Sum".to_string(), sale.item.sum);
-
-                // Grid
-                let title = row![
-                    text("order").width(Fill).center().size(25),
-                    text("barcode").width(FillPortion(2)).center().size(25),
-                    text("name").width(FillPortion(2)).center().size(25),
-                    text("price").width(Fill).center().size(25),
-                    text("amount").width(Fill).center().size(25),
-                    text("sum").width(Fill).center().size(25),
-                ];
-                let list = keyed_column(sale.items.iter().enumerate().map(|x| {
-                    (
-                        x.0,
-                        container(row![
-                            text!("{}", x.0 + 1).width(Fill).center().size(25),
-                            text!("{}", x.1.barcode)
-                                .width(FillPortion(2))
-                                .center()
-                                .size(25),
-                            text!("{}", x.1.name)
-                                .width(FillPortion(2))
-                                .center()
-                                .size(25),
-                            text!("{}", x.1.price).width(Fill).center().size(25),
-                            text!("{}", x.1.amount).width(Fill).center().size(25),
-                            text!("{}", x.1.sum).width(Fill).center().size(25),
-                        ])
-                        .style(|_| container::bordered_box(&Theme::Light))
-                        .into(),
-                    )
-                }));
-
-                // Sale view starts here
-                container(column![
-                    row![
-                        // Grid
-                        column![title, scrollable(list)]
-                            .height(FillPortion(2))
-                            .width(FillPortion(4)),
-                        // Right panel
-                        column![
-                            total_price,
-                            current_price,
-                            if let Pages::Sale(sale) = &self.pages {
-                                if !sale.paying {
-                                    column![pay_button].height(Fill)
-                                } else {
-                                    column![text("1")]
-                                }
-                            } else {
-                                column![text("2")]
-                            }
-                        ]
-                        .width(Fill)
-                    ]
-                    .spacing(10)
-                    .padding(10),
-                    // Bottom Text Input
-                    row![amount, barcode, name, price, sum,]
-                        .spacing(10)
-                        .padding(10)
-                ])
-                .center(Fill)
-                .into()
-            }
-            Pages::Stock => container(column![]).into(),
+            Pages::Main => main_page(),
+            Pages::Sale(sale) => sale_page(&self, &sale),
+            Pages::Stock => stock_page(),
         }
     }
 
     fn subscription(&self) -> Subscription<Message> {
         match self.pages {
+            Pages::Main => keyboard::on_key_release(|key, _| match key {
+                _ => None,
+            }),
             Pages::Sale(_) => keyboard::on_key_release(|key, _| match key {
                 Key::Named(Named::Escape) => Some(Message::Sale(MessageSale::Back)),
                 _ => None,
             }),
             Pages::Stock => keyboard::on_key_release(|key, _| match key {
                 Key::Named(Named::Escape) => Some(Message::Stock(MessageStock::Back)),
-                _ => None,
-            }),
-            Pages::Main => keyboard::on_key_release(|key, _| match key {
                 _ => None,
             }),
         }
