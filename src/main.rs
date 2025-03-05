@@ -1,8 +1,8 @@
-use iced::font::Family;
 use iced::keyboard::key::Named;
 use iced::keyboard::Key;
+use iced::widget::column;
+use iced::Element;
 use iced::{keyboard, Subscription};
-use iced::{Element, Font};
 
 mod widget;
 mod pages {
@@ -11,7 +11,10 @@ mod pages {
     pub mod stock;
 }
 
-use crate::pages::{main::main as main_page, sale::sale as sale_page, stock::stock as stock_page};
+use crate::pages::main::main as main_page;
+use crate::pages::sale::sale as sale_page;
+use crate::pages::stock::stock as stock_page;
+use crate::widget::thai_font;
 
 pub fn main() -> iced::Result {
     iced::application("Sunminimart", State::update, State::view)
@@ -26,6 +29,7 @@ enum Pages {
     Main,
     Sale(Sale),
     Stock,
+    Setting,
 }
 
 #[derive(PartialEq, Default, Debug)]
@@ -69,6 +73,7 @@ enum Message {
     Main(MessageMain),
     Sale(MessageSale),
     Stock(MessageStock),
+    Setting(MessageSetting),
 }
 
 #[derive(Debug, Clone)]
@@ -86,36 +91,37 @@ enum MessageSale {
 #[derive(Debug, Clone)]
 enum MessageStock {
     Back,
-    None,
 }
 
 #[derive(Debug, Clone)]
 enum MessageMain {
-    GotoSale,
-    GotoStock,
+    Sale,
+    Stock,
+    Setting,
 }
 
-fn thai_font() -> Font {
-    Font {
-        family: Family::Name("Sarabun"),
-        weight: iced::font::Weight::Normal,
-        stretch: iced::font::Stretch::Normal,
-        style: iced::font::Style::Normal,
-    }
+#[derive(Debug, Clone)]
+enum MessageSetting {
+    Back,
 }
 
 impl State {
     fn update(&mut self, message: Message) {
         match (&mut self.pages, message) {
             (Pages::Main, Message::Main(message_main)) => match message_main {
-                MessageMain::GotoSale => {
+                MessageMain::Sale => {
                     *self = State {
                         pages: Pages::Sale(Sale::default()),
                     };
                 }
-                MessageMain::GotoStock => {
+                MessageMain::Stock => {
                     *self = State {
                         pages: Pages::Stock,
+                    }
+                }
+                MessageMain::Setting => {
+                    *self = State {
+                        pages: Pages::Setting,
                     }
                 }
             },
@@ -145,7 +151,9 @@ impl State {
             },
             (Pages::Stock, Message::Stock(message_stock)) => match message_stock {
                 MessageStock::Back => *self = State { pages: Pages::Main },
-                _ => {}
+            },
+            (Pages::Setting, Message::Setting(message_setting)) => match message_setting {
+                MessageSetting::Back => *self = State { pages: Pages::Main },
             },
             _ => {
                 // panic!();
@@ -157,22 +165,25 @@ impl State {
         // View start
         match &self.pages {
             Pages::Main => main_page(),
-            Pages::Sale(sale) => sale_page(&self, &sale),
+            Pages::Sale(sale) => sale_page(self, sale),
             Pages::Stock => stock_page(),
+            Pages::Setting => column![].into(),
         }
     }
 
     fn subscription(&self) -> Subscription<Message> {
         match self.pages {
-            Pages::Main => keyboard::on_key_release(|key, _| match key {
-                _ => None,
-            }),
+            Pages::Main => keyboard::on_key_release(|_, _| None),
             Pages::Sale(_) => keyboard::on_key_release(|key, _| match key {
                 Key::Named(Named::Escape) => Some(Message::Sale(MessageSale::Back)),
                 _ => None,
             }),
             Pages::Stock => keyboard::on_key_release(|key, _| match key {
                 Key::Named(Named::Escape) => Some(Message::Stock(MessageStock::Back)),
+                _ => None,
+            }),
+            Pages::Setting => keyboard::on_key_release(|key, _| match key {
+                Key::Named(Named::Escape) => Some(Message::Setting(MessageSetting::Back)),
                 _ => None,
             }),
         }
@@ -186,7 +197,7 @@ mod test {
     #[test]
     fn barcode_changed() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
 
         state.update(Message::Sale(MessageSale::BarcodeChanged(
             "11011".to_string(),
@@ -200,7 +211,7 @@ mod test {
     #[test]
     fn amount_changed() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
 
         state.update(Message::Sale(MessageSale::AmountChanged("10".to_string())));
 
@@ -212,7 +223,7 @@ mod test {
     #[test]
     fn barcode_submit() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
 
         state.update(Message::Sale(MessageSale::BarcodeChanged(
             "100".to_string(),
@@ -226,7 +237,7 @@ mod test {
     #[test]
     fn barcode_submit_empty() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
 
         state.update(Message::Sale(MessageSale::BarcodeSubmit));
 
@@ -239,7 +250,7 @@ mod test {
     #[test]
     fn barcode_submit_amount_not_number() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
 
         state.update(Message::Sale(MessageSale::BarcodeChanged(
             "100".to_string(),
@@ -255,7 +266,7 @@ mod test {
     #[test]
     fn goto_sale() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
         assert_eq!(
             state,
             State {
@@ -267,7 +278,7 @@ mod test {
     #[test]
     fn goto_stock() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoStock));
+        state.update(Message::Main(MessageMain::Stock));
         assert_eq!(
             state,
             State {
@@ -279,7 +290,7 @@ mod test {
     #[test]
     fn enter_pay() {
         let mut state = State::default();
-        state.update(Message::Main(MessageMain::GotoSale));
+        state.update(Message::Main(MessageMain::Sale));
 
         state.update(Message::Sale(MessageSale::EnterPay));
         if let Pages::Sale(sale) = state.pages {
@@ -290,7 +301,7 @@ mod test {
     // #[test]
     // fn pay() {
     //     let mut state = State::default();
-    //     state.update(Message::Main(MessageMain::GotoSale));
+    //     state.update(Message::Main(MessageMain::Sale));
 
     //     state.update(Message::Sale(MessageSale::EnterPay));
     //     if let Pages::Sale(sale) = state.pages {

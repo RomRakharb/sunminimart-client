@@ -1,12 +1,11 @@
-use iced::Element;
-
-use crate::{Message, MessageSale, Pages, Sale, State};
 use iced::widget::{button, column, container, keyed_column, row, scrollable, text};
 use iced::Alignment::Center;
+use iced::Element;
 use iced::Length::{Fill, FillPortion};
 use iced::Theme;
 
 use crate::widget::{labeled_text_box, labeled_text_input, labeled_value};
+use crate::{Message, MessageSale, Pages, Sale, State};
 
 pub fn sale(state: &State, sale: &Sale) -> Element<'static, Message> {
     // Right

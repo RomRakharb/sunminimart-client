@@ -1,10 +1,21 @@
 use crate::Message;
 use iced::{
-    widget::{column, container, text, text_input, Column, Container},
+    font::Family,
+    widget::{column, container, text, text_input, Column},
     Alignment::Center,
+    Font,
     Length::Fill,
     Pixels, Theme,
 };
+
+pub fn thai_font() -> Font {
+    Font {
+        family: Family::Name("Sarabun"),
+        weight: iced::font::Weight::Normal,
+        stretch: iced::font::Stretch::Normal,
+        style: iced::font::Style::Normal,
+    }
+}
 
 pub fn labeled_value<T: std::fmt::Display>(
     thai_label: &'static str,
