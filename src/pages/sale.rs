@@ -4,13 +4,13 @@ use iced::Element;
 use iced::Length::{Fill, FillPortion};
 use iced::Theme;
 
-use crate::widget::{labeled_text_box, labeled_text_input, labeled_value};
+use crate::widget::{labeled_text_input, labeled_value, Position};
 use crate::{Message, MessageSale, Pages, Sale, State};
 
-pub fn sale(state: &State, sale: &Sale) -> Element<'static, Message> {
+pub fn sale_page<'a>(state: &State, sale: &Sale) -> Element<'a, Message> {
     // Right
-    let total_price = labeled_value("รวม:", "Total Price", &sale.total);
-    let current_price = labeled_value("ราคา:", "Price", &sale.item.price);
+    let total_price = labeled_value("รวม / Total Price", 40, Position::Top, &sale.total);
+    let current_price = labeled_value("ราคา / Price", 40, Position::Top, &sale.item.price);
     let received = labeled_text_input(
         "รับเงิน / Received",
         40,
@@ -18,7 +18,7 @@ pub fn sale(state: &State, sale: &Sale) -> Element<'static, Message> {
         |input: String| Message::Sale(MessageSale::Receive(input)),
         Message::Sale(MessageSale::Pay),
     );
-    let change = labeled_value("เงินทอน", "Change", &sale.change);
+    let change = labeled_value("เงินทอน / Change", 40, Position::Top, &sale.change);
     let pay_button = container(
         button(text("จ่ายเงิน / Pay").center().size(40).width(Fill))
             .on_press(Message::Sale(MessageSale::EnterPay)),
@@ -41,9 +41,9 @@ pub fn sale(state: &State, sale: &Sale) -> Element<'static, Message> {
         |input: String| Message::Sale(MessageSale::BarcodeChanged(input)),
         Message::Sale(MessageSale::BarcodeSubmit),
     );
-    let name = labeled_text_box("ชื่อสินค้า / Name", &sale.item.name);
-    let price = labeled_text_box("ราคา / Price", sale.item.price);
-    let sum = labeled_text_box("รวม / Sum", sale.item.sum);
+    let name = labeled_value("ชื่อสินค้า / Name", 25, Position::Top, &sale.item.name);
+    let price = labeled_value("ราคา / Price", 25, Position::Top, &sale.item.price);
+    let sum = labeled_value("รวม / Sum", 25, Position::Top, &sale.item.sum);
 
     // Grid
     let title = row![

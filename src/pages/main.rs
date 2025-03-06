@@ -4,16 +4,16 @@ use iced::Element;
 use iced::Length::Fill;
 use iced::Theme;
 
-use crate::{thai_font, Message, MessageMain};
+use crate::{Message, MessageMain};
 
-pub fn main() -> Element<'static, Message> {
-    let sale_button = button(text("ขาย").font(thai_font()).center().size(40))
+pub fn main_page<'a>() -> Element<'a, Message> {
+    let sale_button = button(text("ขาย").center().size(40))
         .width(300)
         .on_press(Message::Main(MessageMain::Sale));
-    let stock_button = button(text("คลังสินค้า").font(thai_font()).center().size(40))
+    let stock_button = button(text("คลังสินค้า").center().size(40))
         .width(300)
         .on_press(Message::Main(MessageMain::Stock));
-    let setting_button = button(text("ตั้งค่า").font(thai_font()).center().size(40))
+    let setting_button = button(text("ตั้งค่า").center().size(40))
         .width(300)
         .on_press(Message::Main(MessageMain::Setting));
 

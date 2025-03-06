@@ -3,6 +3,6 @@ use iced::Element;
 
 use crate::Message;
 
-pub fn stock() -> Element<'static, Message> {
+pub fn stock_page<'a>() -> Element<'a, Message> {
     container(column![]).into()
 }

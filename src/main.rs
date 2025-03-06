@@ -8,12 +8,14 @@ mod widget;
 mod pages {
     pub mod main;
     pub mod sale;
+    pub mod setting;
     pub mod stock;
 }
 
-use crate::pages::main::main as main_page;
-use crate::pages::sale::sale as sale_page;
-use crate::pages::stock::stock as stock_page;
+use crate::pages::main::main_page;
+use crate::pages::sale::sale_page;
+use crate::pages::setting::setting_page;
+use crate::pages::stock::stock_page;
 use crate::widget::thai_font;
 
 pub fn main() -> iced::Result {
@@ -21,6 +23,18 @@ pub fn main() -> iced::Result {
         .default_font(thai_font())
         .subscription(State::subscription)
         .run()
+}
+
+#[derive(Default, PartialEq, Debug)]
+struct State {
+    pages: Pages,
+    database: Database,
+}
+
+#[derive(Default, PartialEq, Debug)]
+struct Database {
+    ip: String,
+    port: u16,
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -63,17 +77,19 @@ impl Default for Item {
     }
 }
 
-#[derive(Default, PartialEq, Debug)]
-struct State {
-    pages: Pages,
-}
-
 #[derive(Debug, Clone)]
 enum Message {
     Main(MessageMain),
     Sale(MessageSale),
     Stock(MessageStock),
     Setting(MessageSetting),
+}
+
+#[derive(Debug, Clone)]
+enum MessageMain {
+    Sale,
+    Stock,
+    Setting,
 }
 
 #[derive(Debug, Clone)]
@@ -94,13 +110,6 @@ enum MessageStock {
 }
 
 #[derive(Debug, Clone)]
-enum MessageMain {
-    Sale,
-    Stock,
-    Setting,
-}
-
-#[derive(Debug, Clone)]
 enum MessageSetting {
     Back,
 }
@@ -110,19 +119,13 @@ impl State {
         match (&mut self.pages, message) {
             (Pages::Main, Message::Main(message_main)) => match message_main {
                 MessageMain::Sale => {
-                    *self = State {
-                        pages: Pages::Sale(Sale::default()),
-                    };
+                    self.pages = Pages::Sale(Sale::default());
                 }
                 MessageMain::Stock => {
-                    *self = State {
-                        pages: Pages::Stock,
-                    }
+                    self.pages = Pages::Stock;
                 }
                 MessageMain::Setting => {
-                    *self = State {
-                        pages: Pages::Setting,
-                    }
+                    self.pages = Pages::Setting;
                 }
             },
             (Pages::Sale(sale), Message::Sale(message_sale)) => match message_sale {
@@ -147,16 +150,16 @@ impl State {
                     sale.received = received;
                 }
                 MessageSale::Pay => {}
-                MessageSale::Back => *self = State { pages: Pages::Main },
+                MessageSale::Back => self.pages = Pages::Main,
             },
             (Pages::Stock, Message::Stock(message_stock)) => match message_stock {
-                MessageStock::Back => *self = State { pages: Pages::Main },
+                MessageStock::Back => self.pages = Pages::Main,
             },
             (Pages::Setting, Message::Setting(message_setting)) => match message_setting {
-                MessageSetting::Back => *self = State { pages: Pages::Main },
+                MessageSetting::Back => self.pages = Pages::Main,
             },
             _ => {
-                // panic!();
+                panic!();
             }
         }
     }
@@ -167,7 +170,7 @@ impl State {
             Pages::Main => main_page(),
             Pages::Sale(sale) => sale_page(self, sale),
             Pages::Stock => stock_page(),
-            Pages::Setting => column![].into(),
+            Pages::Setting => setting_page(),
         }
     }
 
@@ -267,24 +270,14 @@ mod test {
     fn goto_sale() {
         let mut state = State::default();
         state.update(Message::Main(MessageMain::Sale));
-        assert_eq!(
-            state,
-            State {
-                pages: Pages::Sale(Sale::default())
-            }
-        );
+        assert_eq!(state.pages, Pages::Sale(Sale::default()),);
     }
 
     #[test]
     fn goto_stock() {
         let mut state = State::default();
         state.update(Message::Main(MessageMain::Stock));
-        assert_eq!(
-            state,
-            State {
-                pages: Pages::Stock
-            }
-        )
+        assert_eq!(state.pages, Pages::Stock)
     }
 
     #[test]

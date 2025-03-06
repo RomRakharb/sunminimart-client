@@ -1,12 +1,21 @@
 use crate::Message;
 use iced::{
     font::Family,
-    widget::{column, container, text, text_input, Column},
+    widget::{column, container, row, text, text_input, Column},
     Alignment::Center,
-    Font,
+    Element, Font,
     Length::Fill,
     Pixels, Theme,
 };
+
+#[derive(Default)]
+pub enum Position {
+    #[default]
+    Top,
+    Bottom,
+    Left,
+    Right,
+}
 
 pub fn thai_font() -> Font {
     Font {
@@ -18,17 +27,25 @@ pub fn thai_font() -> Font {
 }
 
 pub fn labeled_value<T: std::fmt::Display>(
-    thai_label: &'static str,
-    english_label: &'static str,
+    label_value: &'static str,
+    font_size: u32,
+    label_position: Position,
     value: &T,
-) -> Column<'static, Message> {
-    column![
-        text(thai_label).size(40).width(Fill).center(),
-        text(english_label).size(40).width(Fill).center(),
-        container(text(format!("{}", value)).size(50).width(Fill).center())
-            .style(|_| container::bordered_box(&Theme::Light))
-            .width(Fill),
-    ]
+) -> Element<'static, Message> {
+    let label = text(label_value)
+        .size(Pixels(font_size as f32))
+        .width(Fill)
+        .center();
+    let text = container(text(format!("{}", value)).size(50).width(Fill).center())
+        .style(|_| container::bordered_box(&Theme::Light))
+        .width(Fill);
+
+    match label_position {
+        Position::Top => container(column![label, text]).into(),
+        Position::Bottom => container(column![text, label]).into(),
+        Position::Left => container(row![text, label]).into(),
+        Position::Right => container(row![label, text]).into(),
+    }
 }
 
 pub fn labeled_text_box<T: std::fmt::Display>(
