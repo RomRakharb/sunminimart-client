@@ -3,7 +3,7 @@ use iced::{
     Element,
 };
 
-use crate::{widget::labeled_text_box, Message};
+use crate::Message;
 
 pub fn setting_page<'a>() -> Element<'a, Message> {
     container(column![row![]]).into()

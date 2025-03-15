@@ -1,7 +1,7 @@
 use crate::Message;
 use iced::{
     font::Family,
-    widget::{column, container, row, text, text_input, Column},
+    widget::{column, container, row, text, text_input},
     Alignment::Center,
     Element, Font,
     Length::Fill,
@@ -36,9 +36,14 @@ pub fn labeled_value<T: std::fmt::Display>(
         .size(Pixels(font_size as f32))
         .width(Fill)
         .center();
-    let text = container(text(format!("{}", value)).size(50).width(Fill).center())
-        .style(|_| container::bordered_box(&Theme::Light))
-        .width(Fill);
+    let text = container(
+        text(format!("{}", value))
+            .size(Pixels((font_size + 8) as f32)) // +8 to adjust size
+            .width(Fill)
+            .center(),
+    )
+    .style(|_| container::bordered_box(&Theme::Light))
+    .width(Fill);
 
     match label_position {
         Position::Top => container(column![label, text]).into(),
@@ -48,41 +53,32 @@ pub fn labeled_value<T: std::fmt::Display>(
     }
 }
 
-pub fn labeled_text_box<T: std::fmt::Display>(
-    label: &'static str,
-    value: T,
-) -> Column<'static, Message> {
-    column![
-        text(label).size(25).width(Fill).center(),
-        text_input("", &format!("{}", value))
-            .size(25)
-            .width(Fill)
-            .align_x(Center)
-    ]
-    .align_x(Center)
-}
-
 pub fn labeled_text_input<T: std::fmt::Display, F>(
-    label: &'static str,
+    label_value: &'static str,
     font_size: u32,
+    label_position: Position,
     value: T,
     on_input: F,
     on_submit: Message,
-) -> Column<'static, Message>
+) -> Element<'static, Message>
 where
     F: Fn(String) -> Message + 'static,
 {
-    column![
-        text(label)
-            .size(Pixels(font_size as f32))
-            .width(Fill)
-            .center(),
-        text_input("", &format!("{}", value))
-            .size(Pixels(font_size as f32))
-            .width(Fill)
-            .align_x(Center)
-            .on_input(on_input)
-            .on_submit(on_submit)
-    ]
-    .align_x(Center)
+    let label = text(label_value)
+        .size(Pixels(font_size as f32))
+        .width(Fill)
+        .center();
+    let input = text_input("", &format!("{}", value))
+        .size(Pixels(font_size as f32))
+        .width(Fill)
+        .align_x(Center)
+        .on_input(on_input)
+        .on_submit(on_submit);
+
+    match label_position {
+        Position::Top => container(column![label, input]).into(),
+        Position::Bottom => container(column![input, label]).into(),
+        Position::Left => container(row![input, label]).into(),
+        Position::Right => container(row![label, input]).into(),
+    }
 }

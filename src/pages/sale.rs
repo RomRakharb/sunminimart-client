@@ -11,25 +11,27 @@ pub fn sale_page<'a>(state: &State, sale: &Sale) -> Element<'a, Message> {
     // Right
     let total_price = labeled_value("รวม / Total Price", 40, Position::Top, &sale.total);
     let current_price = labeled_value("ราคา / Price", 40, Position::Top, &sale.item.price);
-    let received = labeled_text_input(
-        "รับเงิน / Received",
-        40,
-        &sale.received,
-        |input: String| Message::Sale(MessageSale::Receive(input)),
-        Message::Sale(MessageSale::Pay),
-    );
-    let change = labeled_value("เงินทอน / Change", 40, Position::Top, &sale.change);
     let pay_button = container(
         button(text("จ่ายเงิน / Pay").center().size(40).width(Fill))
             .on_press(Message::Sale(MessageSale::EnterPay)),
     )
     .height(Fill)
     .align_y(Center);
+    let received = labeled_text_input(
+        "รับเงิน / Received",
+        40,
+        Position::Top,
+        &sale.received,
+        |input: String| Message::Sale(MessageSale::Receive(input)),
+        Message::Sale(MessageSale::Pay),
+    );
+    let change = labeled_value("เงินทอน / Change", 40, Position::Top, &sale.change);
 
     // Bottom
     let amount = labeled_text_input(
         "จำนวน / Amount",
         25,
+        Position::Top,
         sale.item.amount.clone(),
         |input: String| Message::Sale(MessageSale::AmountChanged(input)),
         Message::Sale(MessageSale::AmountSubmit),
@@ -37,6 +39,7 @@ pub fn sale_page<'a>(state: &State, sale: &Sale) -> Element<'a, Message> {
     let barcode = labeled_text_input(
         "บาร์โค๊ด / Barcode",
         25,
+        Position::Top,
         sale.item.barcode.clone(),
         |input: String| Message::Sale(MessageSale::BarcodeChanged(input)),
         Message::Sale(MessageSale::BarcodeSubmit),
@@ -47,12 +50,18 @@ pub fn sale_page<'a>(state: &State, sale: &Sale) -> Element<'a, Message> {
 
     // Grid
     let title = row![
-        text("order").width(Fill).center().size(25),
-        text("barcode").width(FillPortion(2)).center().size(25),
-        text("name").width(FillPortion(2)).center().size(25),
-        text("price").width(Fill).center().size(25),
-        text("amount").width(Fill).center().size(25),
-        text("sum").width(Fill).center().size(25),
+        text("ลำดับ / Order").width(Fill).center().size(20),
+        text("รหัสสินค้า / Barcode")
+            .width(FillPortion(2))
+            .center()
+            .size(20),
+        text("ชื่อสินค้า / Name")
+            .width(FillPortion(2))
+            .center()
+            .size(20),
+        text("ราคาสินค้า / Price").width(Fill).center().size(20),
+        text("จำนวน / Amount").width(Fill).center().size(20),
+        text("รวม / Sum").width(Fill).center().size(20),
     ];
     let list = keyed_column(sale.items.iter().enumerate().map(|x| {
         (

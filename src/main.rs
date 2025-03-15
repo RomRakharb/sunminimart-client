@@ -1,6 +1,5 @@
 use iced::keyboard::key::Named;
 use iced::keyboard::Key;
-use iced::widget::column;
 use iced::Element;
 use iced::{keyboard, Subscription};
 
@@ -52,7 +51,7 @@ struct Sale {
     item: Item,
     items: Vec<Item>,
     received: String,
-    change: u32,
+    change: i32,
     total: u32,
 }
 
@@ -136,10 +135,20 @@ impl State {
                     sale.item.amount = amount;
                 }
                 MessageSale::BarcodeSubmit => {
-                    if !sale.item.barcode.is_empty()
-                        && sale.item.amount.parse::<u32>().is_ok_and(|x| x != 0)
-                    {
-                        sale.items.push(sale.item.clone());
+                    if let (Ok(amount), Ok(price)) = (
+                        sale.item.amount.parse::<u32>(),
+                        sale.item.barcode.parse::<u32>(),
+                    ) {
+                        if amount > 0 && price > 0 && price <= 1000 {
+                            sale.item.name = format!("สินค้าราคา {} บาท", price);
+                            sale.item.price = price;
+                            sale.item.sum = amount * price;
+                            sale.items.push(sale.item.clone());
+                        } else {
+                        }
+                        sale.total += sale.item.sum;
+                        sale.item.barcode = "".to_string();
+                        sale.item.amount = "1".to_string();
                     }
                 }
                 MessageSale::AmountSubmit => {}
@@ -148,8 +157,11 @@ impl State {
                 }
                 MessageSale::Receive(received) => {
                     sale.received = received;
+                    if let Ok(received) = sale.received.parse::<u32>() {
+                        sale.change = received as i32 - sale.total as i32;
+                    }
                 }
-                MessageSale::Pay => {}
+                MessageSale::Pay => self.pages = Pages::Sale(Sale::default()),
                 MessageSale::Back => self.pages = Pages::Main,
             },
             (Pages::Stock, Message::Stock(message_stock)) => match message_stock {
