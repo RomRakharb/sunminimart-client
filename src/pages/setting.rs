@@ -18,12 +18,13 @@ impl State {
             "database url",
             25,
             Position::Left,
-            self.database.clone(),
+            self.setting.database_url.clone(),
             |input: String| Message::Setting(MessageSetting::DatabaseChanged(input)),
             Message::Setting(MessageSetting::ToDatabaseSubmitButton),
         );
 
-        let database_button = button(text("เชื่อมต่อ / connect").size(Pixels(25.0)));
+        let database_button = button(text("เชื่อมต่อ / connect").size(Pixels(25.0)))
+            .on_press(Message::Setting(MessageSetting::DatabaseSubmit));
 
         container(row![
             Space::with_width(FillPortion(1)),

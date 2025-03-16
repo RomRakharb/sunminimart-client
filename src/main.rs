@@ -1,7 +1,12 @@
+use std::fs::File;
+use std::io::prelude::*;
+
 use iced::keyboard::key::Named;
 use iced::keyboard::Key;
 use iced::Element;
 use iced::{keyboard, Subscription};
+use serde::{Deserialize, Serialize};
+use serde_json;
 
 mod widget;
 mod pages {
@@ -10,6 +15,7 @@ mod pages {
     pub mod setting;
     pub mod stock;
 }
+mod database;
 
 use crate::widget::thai_font;
 
@@ -20,10 +26,24 @@ pub fn main() -> iced::Result {
         .run()
 }
 
-#[derive(Default, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 struct State {
     pages: Pages,
-    database: String,
+    setting: Setting,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        let setting = if let Ok(setting) = Setting::get_setting() {
+            setting
+        } else {
+            Setting::default()
+        };
+        State {
+            pages: Pages::default(),
+            setting,
+        }
+    }
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -106,6 +126,28 @@ enum MessageSetting {
     Back,
 }
 
+#[derive(Deserialize, Serialize, Default, Debug, PartialEq)]
+pub struct Setting {
+    database_url: String,
+}
+
+impl Setting {
+    pub fn get_setting() -> std::io::Result<Self> {
+        let mut file = File::open("setting.json")?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let setting: Setting = serde_json::from_str(&contents)?;
+        Ok(setting)
+    }
+
+    pub fn set_setting(&self) -> std::io::Result<()> {
+        let setting = serde_json::to_string(self)?;
+        let mut file = File::create("setting.json")?;
+        file.write_all(setting.as_bytes())?;
+        Ok(())
+    }
+}
+
 impl State {
     fn update(&mut self, message: Message) {
         match (&mut self.pages, message) {
@@ -161,9 +203,11 @@ impl State {
                 MessageStock::Back => self.pages = Pages::Main,
             },
             (Pages::Setting, Message::Setting(message_setting)) => match message_setting {
-                MessageSetting::DatabaseChanged(database) => self.database = database,
+                MessageSetting::DatabaseChanged(database) => self.setting.database_url = database,
                 MessageSetting::ToDatabaseSubmitButton => {}
-                MessageSetting::DatabaseSubmit => {}
+                MessageSetting::DatabaseSubmit => {
+                    let _ = self.setting.set_setting();
+                }
                 MessageSetting::Back => self.pages = Pages::Main,
             },
             _ => {
