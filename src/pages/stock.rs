@@ -1,8 +1,10 @@
 use iced::widget::{column, container};
 use iced::Element;
 
-use crate::Message;
+use crate::{Message, State};
 
-pub fn stock_page<'a>() -> Element<'a, Message> {
-    container(column![]).into()
+impl State {
+    pub fn stock_page<'a>(&self) -> Element<'a, Message> {
+        container(column![]).into()
+    }
 }

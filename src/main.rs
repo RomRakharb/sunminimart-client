@@ -11,10 +11,6 @@ mod pages {
     pub mod stock;
 }
 
-use crate::pages::main::main_page;
-use crate::pages::sale::sale_page;
-use crate::pages::setting::setting_page;
-use crate::pages::stock::stock_page;
 use crate::widget::thai_font;
 
 pub fn main() -> iced::Result {
@@ -27,13 +23,7 @@ pub fn main() -> iced::Result {
 #[derive(Default, PartialEq, Debug)]
 struct State {
     pages: Pages,
-    database: Database,
-}
-
-#[derive(Default, PartialEq, Debug)]
-struct Database {
-    ip: String,
-    port: u16,
+    database: String,
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -110,6 +100,9 @@ enum MessageStock {
 
 #[derive(Debug, Clone)]
 enum MessageSetting {
+    DatabaseChanged(String),
+    ToDatabaseSubmitButton,
+    DatabaseSubmit,
     Back,
 }
 
@@ -168,6 +161,9 @@ impl State {
                 MessageStock::Back => self.pages = Pages::Main,
             },
             (Pages::Setting, Message::Setting(message_setting)) => match message_setting {
+                MessageSetting::DatabaseChanged(database) => self.database = database,
+                MessageSetting::ToDatabaseSubmitButton => {}
+                MessageSetting::DatabaseSubmit => {}
                 MessageSetting::Back => self.pages = Pages::Main,
             },
             _ => {
@@ -179,10 +175,10 @@ impl State {
     fn view(&self) -> Element<Message> {
         // View start
         match &self.pages {
-            Pages::Main => main_page(),
-            Pages::Sale(sale) => sale_page(self, sale),
-            Pages::Stock => stock_page(),
-            Pages::Setting => setting_page(),
+            Pages::Main => self.main_page(),
+            Pages::Sale(sale) => self.sale_page(sale),
+            Pages::Stock => self.stock_page(),
+            Pages::Setting => self.setting_page(),
         }
     }
 

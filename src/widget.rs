@@ -48,8 +48,8 @@ pub fn labeled_value<T: std::fmt::Display>(
     match label_position {
         Position::Top => container(column![label, text]).into(),
         Position::Bottom => container(column![text, label]).into(),
-        Position::Left => container(row![text, label]).into(),
-        Position::Right => container(row![label, text]).into(),
+        Position::Left => container(row![label, text]).into(),
+        Position::Right => container(row![text, label]).into(),
     }
 }
 
@@ -64,21 +64,17 @@ pub fn labeled_text_input<T: std::fmt::Display, F>(
 where
     F: Fn(String) -> Message + 'static,
 {
-    let label = text(label_value)
-        .size(Pixels(font_size as f32))
-        .width(Fill)
-        .center();
+    let label = text(label_value).size(Pixels(font_size as f32)).center();
     let input = text_input("", &format!("{}", value))
         .size(Pixels(font_size as f32))
-        .width(Fill)
         .align_x(Center)
         .on_input(on_input)
         .on_submit(on_submit);
 
     match label_position {
-        Position::Top => container(column![label, input]).into(),
+        Position::Top => container(column![label.width(Fill), input.width(Fill)]).into(),
         Position::Bottom => container(column![input, label]).into(),
-        Position::Left => container(row![input, label]).into(),
-        Position::Right => container(row![label, input]).into(),
+        Position::Left => container(row![label, input].spacing(25)).into(),
+        Position::Right => container(row![input, label]).into(),
     }
 }
