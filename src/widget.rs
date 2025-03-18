@@ -54,6 +54,7 @@ pub fn labeled_value<T: std::fmt::Display>(
 }
 
 pub fn labeled_text_input<T: std::fmt::Display, F>(
+    id: &'static str,
     label_value: &'static str,
     font_size: u32,
     label_position: Position,
@@ -66,6 +67,7 @@ where
 {
     let label = text(label_value).size(Pixels(font_size as f32)).center();
     let input = text_input("", &format!("{}", value))
+        .id(id)
         .size(Pixels(font_size as f32))
         .align_x(Center)
         .on_input(on_input)

@@ -1,12 +1,8 @@
-use std::fs::File;
-use std::io::prelude::*;
-
 use iced::keyboard::key::Named;
 use iced::keyboard::Key;
-use iced::Element;
+use iced::widget::text_input::focus;
 use iced::{keyboard, Subscription};
-use serde::{Deserialize, Serialize};
-use serde_json;
+use iced::{Element, Task};
 
 mod widget;
 mod pages {
@@ -15,8 +11,10 @@ mod pages {
     pub mod setting;
     pub mod stock;
 }
-mod database;
+mod api;
+mod setting;
 
+use crate::setting::Setting;
 use crate::widget::thai_font;
 
 pub fn main() -> iced::Result {
@@ -34,14 +32,9 @@ struct State {
 
 impl Default for State {
     fn default() -> Self {
-        let setting = if let Ok(setting) = Setting::get_setting() {
-            setting
-        } else {
-            Setting::default()
-        };
         State {
             pages: Pages::default(),
-            setting,
+            setting: Setting::get_setting().unwrap_or_default(),
         }
     }
 }
@@ -108,6 +101,7 @@ enum MessageSale {
     AmountChanged(String),
     AmountSubmit,
     EnterPay,
+    ExitPay,
     Receive(String),
     Pay,
     Back,
@@ -126,34 +120,14 @@ enum MessageSetting {
     Back,
 }
 
-#[derive(Deserialize, Serialize, Default, Debug, PartialEq)]
-pub struct Setting {
-    database_url: String,
-}
-
-impl Setting {
-    pub fn get_setting() -> std::io::Result<Self> {
-        let mut file = File::open("setting.json")?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        let setting: Setting = serde_json::from_str(&contents)?;
-        Ok(setting)
-    }
-
-    pub fn set_setting(&self) -> std::io::Result<()> {
-        let setting = serde_json::to_string(self)?;
-        let mut file = File::create("setting.json")?;
-        file.write_all(setting.as_bytes())?;
-        Ok(())
-    }
-}
-
 impl State {
-    fn update(&mut self, message: Message) {
+    fn update(&mut self, message: Message) -> Task<Message> {
+        let mut task = Task::none();
         match (&mut self.pages, message) {
             (Pages::Main, Message::Main(message_main)) => match message_main {
                 MessageMain::Sale => {
                     self.pages = Pages::Sale(Sale::default());
+                    task = focus("barcode");
                 }
                 MessageMain::Stock => {
                     self.pages = Pages::Stock;
@@ -180,6 +154,7 @@ impl State {
                             sale.item.sum = amount * price;
                             sale.items.push(sale.item.clone());
                         } else {
+                            todo!()
                         }
                         sale.total += sale.item.sum;
                         sale.item.barcode = "".to_string();
@@ -189,6 +164,13 @@ impl State {
                 MessageSale::AmountSubmit => {}
                 MessageSale::EnterPay => {
                     sale.paying = true;
+                    task = focus("received");
+                }
+                MessageSale::ExitPay => {
+                    sale.paying = false;
+                    sale.received = "0".to_string();
+                    sale.change = -(sale.total as i32);
+                    task = focus("barcode");
                 }
                 MessageSale::Receive(received) => {
                     sale.received = received;
@@ -196,7 +178,10 @@ impl State {
                         sale.change = received as i32 - sale.total as i32;
                     }
                 }
-                MessageSale::Pay => self.pages = Pages::Sale(Sale::default()),
+                MessageSale::Pay => {
+                    self.pages = Pages::Sale(Sale::default());
+                    task = focus("barcode");
+                }
                 MessageSale::Back => self.pages = Pages::Main,
             },
             (Pages::Stock, Message::Stock(message_stock)) => match message_stock {
@@ -214,6 +199,7 @@ impl State {
                 panic!();
             }
         }
+        task
     }
 
     fn view(&self) -> Element<Message> {
@@ -227,12 +213,20 @@ impl State {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        match self.pages {
+        match &self.pages {
             Pages::Main => keyboard::on_key_release(|_, _| None),
-            Pages::Sale(_) => keyboard::on_key_release(|key, _| match key {
-                Key::Named(Named::Escape) => Some(Message::Sale(MessageSale::Back)),
-                _ => None,
-            }),
+            Pages::Sale(sale) => match !sale.paying {
+                true => keyboard::on_key_release(|key, _| match key {
+                    Key::Named(Named::Escape) => Some(Message::Sale(MessageSale::Back)),
+                    Key::Named(Named::F12) => Some(Message::Sale(MessageSale::EnterPay)),
+                    _ => None,
+                }),
+                false => keyboard::on_key_release(|key, _| match key {
+                    Key::Named(Named::Escape) => Some(Message::Sale(MessageSale::Back)),
+                    Key::Named(Named::F12) => Some(Message::Sale(MessageSale::ExitPay)),
+                    _ => None,
+                }),
+            },
             Pages::Stock => keyboard::on_key_release(|key, _| match key {
                 Key::Named(Named::Escape) => Some(Message::Stock(MessageStock::Back)),
                 _ => None,

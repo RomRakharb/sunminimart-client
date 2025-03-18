@@ -15,6 +15,7 @@ use crate::{
 impl State {
     pub fn setting_page<'a>(&self) -> Element<'a, Message> {
         let database_url = labeled_text_input(
+            "database_url",
             "database url",
             25,
             Position::Left,
@@ -36,7 +37,7 @@ impl State {
                 .padding(50),
             )
             .style(|_| container::bordered_box(&Theme::Light))
-            .width(FillPortion(3)),
+            .width(FillPortion(2)),
             Space::with_width(FillPortion(1)),
         ])
         .center(Fill)
