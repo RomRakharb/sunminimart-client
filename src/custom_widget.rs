@@ -1,12 +1,10 @@
-use std::ascii::AsciiExt;
-use std::borrow::Cow;
-
-use crate::Message;
 use iced::font::Family;
-use iced::widget::{self, container, text as iced_text, Container, Text, TextInput};
+use iced::widget::{self, container, Button, Container, Text, TextInput};
 use iced::Alignment::Center;
 use iced::Length::Fill;
-use iced::{Font, Pixels, Theme};
+use iced::{Element, Font, Pixels, Theme};
+
+use crate::Message;
 
 pub fn thai_font() -> Font {
     Font {
@@ -18,22 +16,22 @@ pub fn thai_font() -> Font {
 }
 
 pub fn text<'a>(
-    display_value: impl iced_text::IntoFragment<'a> + std::clone::Clone,
+    display_value: impl widget::text::IntoFragment<'a> + std::clone::Clone,
     font_size: u32,
 ) -> Text<'a> {
-    let text = iced_text(display_value.clone())
+    let text = widget::text(display_value.clone())
         .size(Pixels(font_size as f32))
         .width(Fill)
         .center();
 
     match display_value.into_fragment().is_ascii() {
         true => text,
-        false => text.shaping(iced_text::Shaping::Advanced),
+        false => text.shaping(widget::text::Shaping::Advanced),
     }
 }
 
 pub fn boxed_text<'a>(
-    display_value: impl iced_text::IntoFragment<'a> + std::clone::Clone,
+    display_value: impl widget::text::IntoFragment<'a> + std::clone::Clone,
     font_size: u32,
 ) -> Container<'a, Message> {
     container(text(display_value, font_size + 8))
@@ -51,4 +49,11 @@ pub fn text_input<'a>(
         .size(Pixels(font_size as f32))
         .width(Fill)
         .align_x(Center)
+}
+
+pub fn button<'a>(
+    content: impl widget::text::IntoFragment<'a> + std::clone::Clone,
+    font_size: u32,
+) -> Button<'a, Message> {
+    widget::button(text(content, font_size))
 }
