@@ -1,3 +1,6 @@
+use std::ascii::AsciiExt;
+use std::borrow::Cow;
+
 use crate::Message;
 use iced::font::Family;
 use iced::widget::{self, container, text as iced_text, Container, Text, TextInput};
@@ -14,21 +17,23 @@ pub fn thai_font() -> Font {
     }
 }
 
-enum Type {
-    Text,
-    Number,
-}
-
-pub fn text<'a>(display_value: impl iced_text::IntoFragment<'a>, font_size: u32) -> Text<'a> {
-    iced_text(display_value)
-        .shaping(iced_text::Shaping::Advanced)
+pub fn text<'a>(
+    display_value: impl iced_text::IntoFragment<'a> + std::clone::Clone,
+    font_size: u32,
+) -> Text<'a> {
+    let text = iced_text(display_value.clone())
         .size(Pixels(font_size as f32))
         .width(Fill)
-        .center()
+        .center();
+
+    match display_value.into_fragment().is_ascii() {
+        true => text,
+        false => text.shaping(iced_text::Shaping::Advanced),
+    }
 }
 
 pub fn boxed_text<'a>(
-    display_value: impl iced_text::IntoFragment<'a>,
+    display_value: impl iced_text::IntoFragment<'a> + std::clone::Clone,
     font_size: u32,
 ) -> Container<'a, Message> {
     container(text(display_value, font_size + 8))
