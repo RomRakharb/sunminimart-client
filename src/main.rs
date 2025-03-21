@@ -4,7 +4,7 @@ use iced::widget::text_input::focus;
 use iced::{keyboard, Subscription};
 use iced::{Element, Task};
 
-mod widget;
+mod custom_widget;
 mod pages {
     pub mod main;
     pub mod sale;
@@ -14,8 +14,8 @@ mod pages {
 mod api;
 mod setting;
 
+use crate::custom_widget::thai_font;
 use crate::setting::Setting;
-use crate::widget::thai_font;
 
 pub fn main() -> iced::Result {
     iced::application("Sunminimart", State::update, State::view)
