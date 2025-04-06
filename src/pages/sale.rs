@@ -45,24 +45,12 @@ impl State {
                 .on_input(|input: String| Message::Sale(MessageSale::BarcodeChanged(input)))
                 .on_submit(Message::Sale(MessageSale::BarcodeSubmit)),
         ];
-        let name = column![
-            custom_widget::text("ชื่อสินค้า", 25),
-            custom_widget::boxed_text(&sale.item.name, 25)
-        ];
-        let price = column![
-            custom_widget::text("ราคา", 25),
-            custom_widget::boxed_text(sale.item.price, 25)
-        ];
-        let sum = column![
-            custom_widget::text("รวม", 25),
-            custom_widget::boxed_text(sale.item.sum, 25)
-        ];
 
         // Grid
         let title = row![
             custom_widget::text("ลำดับ", 20).width(Fill),
             custom_widget::text("รหัสสินค้า", 20).width(FillPortion(2)),
-            custom_widget::text("ชื่อสินค้า", 20).width(FillPortion(2)),
+            custom_widget::text("ชื่อ", 20).width(FillPortion(2)),
             custom_widget::text("ราคาสินค้า", 20).width(Fill),
             custom_widget::text("จำนวน", 20).width(Fill),
             custom_widget::text("รวม", 20).width(Fill),
@@ -94,26 +82,20 @@ impl State {
                 column![
                     total_price,
                     current_price,
-                    if let Pages::Sale(sale) = &self.pages {
-                        if !sale.paying {
-                            column![
-                                Space::with_height(Fill),
-                                Space::with_height(Fill),
-                                Space::with_height(Fill),
-                                container(pay_button).height(Fill)
-                            ]
-                            .height(Fill)
-                        } else {
-                            column![
-                                Space::with_height(FillPortion(1)),
-                                received.height(FillPortion(1)),
-                                change.height(FillPortion(1)),
-                                container(pay_button).height(FillPortion(1))
-                            ]
-                            .height(Fill)
-                        }
+                    if !sale.paying {
+                        column![
+                            Space::with_height(FillPortion(3)),
+                            container(pay_button).height(Fill)
+                        ]
+                        .height(Fill)
                     } else {
-                        column![]
+                        column![
+                            Space::with_height(Fill),
+                            received.height(Fill),
+                            change.height(Fill),
+                            container(pay_button).height(Fill)
+                        ]
+                        .height(Fill)
                     }
                 ]
                 .width(Fill)
@@ -121,9 +103,14 @@ impl State {
             .spacing(10)
             .padding(10),
             // Bottom Text Input
-            row![amount, barcode, name, price, sum,]
-                .spacing(10)
-                .padding(10)
+            row![
+                Space::with_width(Fill),
+                amount,
+                barcode,
+                Space::with_width(Fill)
+            ]
+            .spacing(10)
+            .padding(10)
         ])
         .center(Fill)
         .into()

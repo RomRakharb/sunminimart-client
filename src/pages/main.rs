@@ -1,20 +1,10 @@
-use iced::widget::{column, container, row, text, Button, Space};
+use iced::widget::{column, container, row, Space};
 use iced::Alignment::Center;
 use iced::Element;
 use iced::Length::{Fill, FillPortion};
 use iced::Theme;
 
 use crate::{custom_widget, Message, MessageMain, State};
-
-// fn button(display_text: &str) -> Button<'_, Message> {
-//     iced::widget::button(
-//         text(display_text)
-//             .shaping(text::Shaping::Advanced)
-//             .center()
-//             .size(40),
-//     )
-//     .width(300)
-// }
 
 impl State {
     pub fn main_page<'a>(&self) -> Element<'a, Message> {
